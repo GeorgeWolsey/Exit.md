@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>EXIT – coming soon</title>
+  <meta name="description" content="EXIT, a project of AO “Viață fără limită”. Our website is launching soon.">
+  <meta name="theme-color" content="#1d2050">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231d2050'/%3E%3Ccircle cx='16' cy='21' r='9' fill='%23ffc46b'/%3E%3Crect y='21' width='32' height='11' fill='%2322173a'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&family=Young+Serif&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --night: #11163a;
+      --dusk: #4b3474;
+      --rose: #c4677e;
+      --ember: #f2a873;
+      --sun: #ffd98a;
+      --text: #fff4e6;
+      --warm: #ffd9a8;
+      --muted: #e6d3e6;
+
+      /* Scene geometry. Everything scales with the viewport in both directions. */
+      --hills-h: clamp(80px, 28vh, 300px);
+      --sun-size: min(40vmin, 19rem);
+      /* Height above the bottom edge reached by the top of the risen sun;
+         the content keeps clear of it so text never sits on the sun. */
+      --sun-top: calc(var(--hills-h) * .2 + var(--sun-size) * .78);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body { margin: 0; }
+
+    body {
+      background: var(--night);
+      color: var(--text);
+      font-family: "Atkinson Hyperlegible Next", system-ui, -apple-system, "Segoe UI", sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ---- The scene: night sky that warms into dawn as the sun rises ---- */
+
+    .scene {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      background: linear-gradient(to bottom, var(--night) 0%, #1c1b48 55%, #2b2458 100%);
+      /* starts ash-grey; colour returns as the sun comes up */
+      filter: grayscale(.6);
+      animation: colour-in 5s ease-in-out .3s forwards;
+    }
+
+    .scene::before {
+      /* dawn light, fades in over the night sky */
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 45% at 50% 100%, rgba(255, 196, 120, .55), transparent 70%),
+        linear-gradient(to bottom, #1d2050 0%, var(--dusk) 42%, var(--rose) 72%, var(--ember) 88%, var(--sun) 100%);
+      opacity: 0;
+      animation: dawn 5.5s ease-in-out .3s forwards;
+    }
+
+    .stars {
+      position: absolute;
+      inset: 0 0 35% 0;
+      background-image:
+        radial-gradient(1.4px 1.4px at 12% 22%, #fff 50%, transparent 51%),
+        radial-gradient(1px 1px at 34% 64%, #fff 50%, transparent 51%),
+        radial-gradient(1.6px 1.6px at 58% 14%, #fff 50%, transparent 51%),
+        radial-gradient(1px 1px at 81% 42%, #fff 50%, transparent 51%),
+        radial-gradient(1.2px 1.2px at 93% 8%, #fff 50%, transparent 51%),
+        radial-gradient(1px 1px at 47% 88%, #fff 50%, transparent 51%);
+      background-size: 380px 260px;
+      -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent);
+              mask-image: linear-gradient(to bottom, #000 30%, transparent);
+      opacity: .85;
+      animation: fade-stars 5s ease-in .6s forwards;
+    }
+
+    .sun {
+      position: absolute;
+      left: 50%;
+      bottom: calc(var(--hills-h) * .2);
+      width: var(--sun-size);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff5d6 0 28%, var(--sun) 58%, #f7b267 100%);
+      box-shadow:
+        0 0 5rem 1.5rem rgba(255, 200, 130, .45),
+        0 0 14rem 5rem rgba(242, 130, 120, .28);
+      transform: translate(-50%, 100%);
+      animation: rise 5s cubic-bezier(.22, .61, .25, 1) .3s forwards;
+    }
+
+    /* Embers drifting up from the hills. */
+    .embers span {
+      position: absolute;
+      left: var(--x);
+      bottom: calc(var(--hills-h) * .3);
+      width: var(--s);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: #ffd59a;
+      box-shadow: 0 0 .4rem .12rem rgba(255, 168, 92, .65);
+      opacity: 0;
+      animation: ember var(--d) linear var(--delay) infinite;
+    }
+
+    .hills {
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      /* never narrower than the drawing's own proportions (1440:320), so
+         peaks don't turn into needles on narrow screens; crop instead */
+      width: max(100%, var(--hills-h) * 4.5);
+      height: var(--hills-h);
+      transform: translateX(-50%);
+      display: block;
+    }
+
+    /* ---- Content ---- */
+
+    .page {
+      position: relative;
+      min-height: 100vh;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: clamp(1.25rem, 9vh, 6.5rem) 1.5rem calc(var(--sun-top) + clamp(.5rem, 3vh, 2rem));
+      text-align: center;
+      opacity: 0;
+      animation: appear 1.6s ease-out 1.4s forwards;
+    }
+
+    .wordmark {
+      margin: 0;
+      font-family: "Young Serif", Georgia, "Times New Roman", serif;
+      font-weight: 400;
+      font-size: min(30vw, 24vh, 15rem);
+      line-height: .9;
+      letter-spacing: .06em;
+      /* keep the word optically centred despite the trailing letter-spacing */
+      margin-right: -.06em;
+      text-shadow: 0 0 .5em rgba(255, 190, 140, .18);
+    }
+
+    .soon {
+      margin: clamp(.5rem, 2.5vh, 1.5rem) 0 0;
+      font-family: "Young Serif", Georgia, "Times New Roman", serif;
+      font-size: clamp(1.25rem, 4.2vh, 2.25rem);
+      line-height: 1.2;
+      color: var(--warm);
+    }
+
+    .lede {
+      margin: clamp(.5rem, 2vh, 1.25rem) auto 0;
+      max-width: 28rem;
+      font-size: clamp(.95rem, 2.4vh, 1.2rem);
+      line-height: 1.55;
+      color: var(--muted);
+      text-wrap: balance;
+    }
+
+    .by {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin: 0;
+      padding: 0 1.5rem max(clamp(.6rem, 2.5vh, 1.5rem), env(safe-area-inset-bottom));
+      font-size: .875rem;
+      color: rgba(255, 244, 230, .72);
+    }
+
+    @keyframes rise       { to { transform: translate(-50%, 38%); } }
+    @keyframes dawn       { to { opacity: 1; } }
+    @keyframes colour-in  { to { filter: grayscale(0); } }
+    @keyframes fade-stars { to { opacity: .12; } }
+    @keyframes appear     { to { opacity: 1; } }
+    @keyframes ember {
+      0%   { opacity: 0;   transform: translate(0, 0); }
+      12%  { opacity: .85; }
+      55%  { transform: translate(var(--drift), -28vh); }
+      100% { opacity: 0;   transform: translate(calc(var(--drift) * -.4), -55vh); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 1ms !important;
+        animation-delay: 0s !important;
+      }
+      .embers { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="scene" aria-hidden="true">
+    <div class="stars"></div>
+    <div class="sun"></div>
+    <svg class="hills" viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <!-- far range: a pass in the middle where the sun rises; the two sides have different rhythms so they don't mirror each other -->
+      <path fill="#3a2650" d="M0 130 L60 92 L100 114 L160 52 L200 98 L240 72 L300 16 L352 86 L395 58 L450 120 L490 104 L528 122 L548 117 L586 150 L620 157 L646 179 L688 191 L716 201 L742 197 L771 191 L795 176 L813 180 L846 158 L868 151 L899 128 L930 112 L965 120 L1010 84 L1050 96 L1100 50 L1130 64 L1190 30 L1240 88 L1275 70 L1330 104 L1385 80 L1440 112 L1440 320 L0 320 Z"/>
+      <!-- near range: lower, rougher foothills -->
+      <path fill="#22173a" d="M0 240 L80 206 L140 232 L220 180 L300 226 L370 204 L440 242 L520 228 L572 246 L614 243 L676 261 L742 268 L801 258 L858 255 L920 222 L990 236 L1060 206 L1120 220 L1200 184 L1290 222 L1360 200 L1440 214 L1440 320 L0 320 Z"/>
+    </svg>
+    <div class="embers">
+      <span style="--x:18%; --s:4px;   --d:13s; --delay:2.4s; --drift:14px"></span>
+      <span style="--x:29%; --s:3px;   --d:10s; --delay:4.1s; --drift:-10px"></span>
+      <span style="--x:38%; --s:3.5px; --d:15s; --delay:3.0s; --drift:18px"></span>
+      <span style="--x:45%; --s:3px;   --d:11s; --delay:6.2s; --drift:-16px"></span>
+      <span style="--x:53%; --s:4.5px; --d:14s; --delay:2.0s; --drift:-12px"></span>
+      <span style="--x:58%; --s:3px;   --d:9s;  --delay:5.0s; --drift:10px"></span>
+      <span style="--x:66%; --s:3.5px; --d:12s; --delay:3.6s; --drift:-18px"></span>
+      <span style="--x:75%; --s:3px;   --d:16s; --delay:7.0s; --drift:12px"></span>
+      <span style="--x:84%; --s:4px;   --d:12s; --delay:4.6s; --drift:-8px"></span>
+    </div>
+  </div>
+
+  <main class="page">
+    <h1 class="wordmark">EXIT</h1>
+    <p class="soon">Rising soon.</p>
+    <p class="lede">We're rebuilding something good. Come back soon to see what we're preparing and how you can get involved.</p>
+    <p class="by">A project of AO <span lang="ro">“Viață fără limită”</span></p>
+  </main>
+</body>
+</html>
